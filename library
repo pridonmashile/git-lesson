@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library Management System</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+
+        header {
+            background: #2c3e50;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .page {
+            display: none;
+            padding: 20px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        button {
+            background: #3498db;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d6fa5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        th {
+            background: #34495e;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>📚 Library Management System</header>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="page active">
+    <h2>Member Login</h2>
+    <input type="text" id="memberID" placeholder="Enter Member ID">
+    <br>
+    <button onclick="login()">Login</button>
+</div>
+
+<!-- BOOK CATALOG -->
+<div id="catalogPage" class="page">
+    <h2>Book Catalog</h2>
+
+    <input type="text" id="searchBox" placeholder="Search book or author..." onkeyup="searchBooks()">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Author</th>
+                <th>Available</th>
+                <th>Borrow</th>
+            </tr>
+        </thead>
+        <tbody id="bookList"></tbody>
+    </table>
+
+    <button onclick="showPage('librarianPage')">Go to Librarian Panel</button>
+</div>
+
+<!-- LIBRARIAN PAGE -->
+<div id="librarianPage" class="page">
+    <h2>Librarian – Borrowing Records</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Member</th>
+                <th>Book</th>
+                <th>Date Borrowed</th>
+                <th>Return</th>
+                <th>Late Fee</th>
+            </tr>
+        </thead>
+        <tbody id="borrowTable"></tbody>
+    </table>
+
+    <button onclick="showPage('catalogPage')">Back to Catalog</button>
+</div>
+
+<script>
+/* ---------------------- SAMPLE DATA ----------------------- */
+
+let books = [
+    { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", available: true },
+    { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", available: true },
+    { id: 3, title: "Rich Dad Poor Dad", author: "Robert Kiyosaki", available: true },
+    { id: 4, title: "Harry Potter", author: "J.K. Rowling", available: true }
+];
+
+let borrowings = [];
+let currentMember = "";
+
+/* ---------------------- PAGE NAVIGATION ----------------------- */
+
+function showPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(page).classList.add('active');
+}
+
+/* ---------------------- LOGIN ----------------------- */
+
+function login() {
+    let memberID = document.getElementById("memberID").value;
+
+    if (memberID.trim() === "") {
+        alert("Please enter your Member ID.");
+        return;
+    }
+
+    currentMember = memberID;
+    showPage('catalogPage');
+    loadBooks();
+}
+
+/* ---------------------- LOAD BOOK LIST ----------------------- */
+
+function loadBooks() {
+    let table = document.getElementById("bookList");
+    table.innerHTML = "";
+
+    books.forEach(b => {
+        table.innerHTML += `
+            <tr>
+                <td>${b.title}</td>
+                <td>${b.author}</td>
+                <td>${b.available ? "Yes" : "No"}</td>
+                <td><button onclick="borrowBook(${b.id})" ${b.available ? "" : "disabled"}>Borrow</button></td>
+            </tr>
+        `;
+    });
+}
+
+/* ---------------------- SEARCH BOOKS ----------------------- */
+
+function searchBooks() {
+    let keyword = document.getElementById("searchBox").value.toLowerCase();
+    let table = document.getElementById("bookList");
+
+    table.innerHTML = "";
+
+    books.filter(b =>
+        b.title.toLowerCase().includes(keyword) ||
+        b.author.toLowerCase().includes(keyword)
+    ).forEach(b => {
+        table.innerHTML += `
+            <tr>
+                <td>${b.title}</td>
+                <td>${b.author}</td>
+                <td>${b.available ? "Yes" : "No"}</td>
+                <td><button onclick="borrowBook(${b.id})" ${b.available ? "" : "disabled"}>Borrow</button></td>
+            </tr>
+        `;
+    });
+}
+
+/* ---------------------- BORROW BOOK ----------------------- */
+
+function borrowBook(id) {
+    let book = books.find(b => b.id === id);
+
+    if (!book.available) {
+        alert("This book is already borrowed.");
+        return;
+    }
+
+    book.available = false;
+
+    borrowings.push({
+        member: currentMember,
+        book: book.title,
+        date: new Date()
+    });
+
+    loadBooks();
+    loadBorrowings();
+}
+
+/* ---------------------- LOAD BORROWING TABLE ----------------------- */
+
+function loadBorrowings() {
+    let table = document.getElementById("borrowTable");
+    table.innerHTML = "";
+
+    borrowings.forEach((b, i) => {
+        let fee = calculateLateFee(b.date);
+
+        table.innerHTML += `
+            <tr>
+                <td>${b.member}</td>
+                <td>${b.book}</td>
+                <td>${new Date(b.date).toDateString()}</td>
+                <td><button onclick="returnBook(${i})">Return</button></td>
+                <td>R${fee}</td>
+            </tr>
+        `;
+    });
+}
+
+/* ---------------------- RETURN BOOK ----------------------- */
+
+function returnBook(index) {
+    let borrow = borrowings[index];
+
+    let book = books.find(b => b.title === borrow.book);
+    book.available = true;
+
+    borrowings.splice(index, 1);
+
+    loadBooks();
+    loadBorrowings();
+}
+
+/* ---------------------- LATE FEE CALCULATION ----------------------- */
+
+function calculateLateFee(borrowDate) {
+    const allowedDays = 7;
+    const dailyFee = 5; // R5 per extra day
+
+    let now = new Date();
+    let diffDays = Math.floor((now - new Date(borrowDate)) / (1000 * 60 * 60 * 24));
+
+    return diffDays > allowedDays ? (diffDays - allowedDays) * dailyFee : 0;
+}
+
+</script>
+</body>
+</html>

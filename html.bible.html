@@ -1,0 +1,36 @@
+<html>
+    <link rel="stylesheet" href="trc.css">
+    <script src="trc.js"></script>
+<head>
+    <title>Library System</title>
+</head>
+<body>
+    <header>
+        <h1>Library System</h1>
+    </header>
+    <main>
+        <section id="search-catalog">
+            <h2>Search Book Catalog</h2>
+            <input type="search" id="search-input" placeholder="Search by title, author, or ISBN">
+            <button id="search-btn">Search</button>
+            <ul id="search-results"></ul>
+        </section>
+        <section id="member-login">
+            <h2>Member Login</h2>
+            <form id="login-form">
+                <label for="member-id">Member ID:</label>
+                <input type="text" id="lithabo" required>
+                <label for="password">Password:</label>
+                <input type="password" id="pridon" required>
+                <button id="login-btn">Login</button>
+            </form>
+        </section>
+        <section id="librarian-management">
+            <h2>Librarian Management</h2>
+            <button id="checkout-btn">Checkout Book</button>
+            <button id="return-btn">Return Book</button>
+            <button id="late-fees-btn">Calculate Late Fees</button>
+        </section>
+    </main>
+</body>
+</html>
